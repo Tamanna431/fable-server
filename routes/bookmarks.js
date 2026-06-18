@@ -5,7 +5,19 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// GET /api/bookmarks — Get user's bookmarks
+// GET /api/bookmarks/my — Get user's bookmarks with ebook details
+router.get('/my', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate({ path: 'bookmarks', populate: { path: 'writer', select: 'fullName avatar' } });
+    const bookmarks = (user.bookmarks || []).map(ebook => ({ ebook }));
+    res.json({ bookmarks });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch bookmarks.' });
+  }
+});
+
+// GET /api/bookmarks — Get user's bookmarks (simple)
 router.get('/', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).populate('bookmarks');
